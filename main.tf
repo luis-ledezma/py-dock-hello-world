@@ -53,7 +53,7 @@ resource "aws_ecs_task_definition" "app" {
   family                = "hello-world-task"
   network_mode          = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                   = "0.25"
+  cpu                   = "256"
   memory                = "512"
 
   container_definitions = jsonencode([{
