@@ -45,12 +45,12 @@ resource "aws_security_group" "allow_http" {
 
 # Create an ECS Cluster
 resource "aws_ecs_cluster" "main" {
-  name = "hello-world-cluster"
+  name = "py-docker-hello-world-cluster"
 }
 
 # Define the ECS Task Definition
 resource "aws_ecs_task_definition" "app" {
-  family                = "hello-world-task"
+  family                = "py-docker-hello-world-task"
   network_mode          = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                   = "256"
@@ -72,7 +72,7 @@ resource "aws_ecs_task_definition" "app" {
 
 # Create an ECS Service
 resource "aws_ecs_service" "app" {
-  name            = "hello-world-service"
+  name            = "py-docker-hello-world-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = 1
