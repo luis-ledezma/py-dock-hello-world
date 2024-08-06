@@ -54,11 +54,11 @@ jobs:
             -backend-config='skip_metadata_api_check=true' \
             -backend-config='skip_region_validation=true' \
             -backend-config='skip_credentials_validation=true' \
-            -backend-config='region=${{ var.AWS_REGION }}' \
-            -backend-config='bucket=${{ var.TF_S3_BUCKET }}' \
+            -backend-config='region=${{ vars.AWS_REGION }}' \
+            -backend-config='bucket=${{ vars.TF_S3_BUCKET }}' \
             -backend-config='key=terraform.tfstate' \
-            -backend-config='dynamodb_table=${{ var.TF_DYNAMODB_TABLE }}' \
-            -backend-config='role_arn=${{ var.AWS_ROLE_ARN }}'
+            -backend-config='dynamodb_table=${{ vars.TF_DYNAMODB_TABLE }}' \
+            -backend-config='role_arn=${{ vars.AWS_ROLE_ARN }}'
       
       - name: TF apply
         shell: bash
@@ -66,5 +66,5 @@ jobs:
           set -eux
           terraform apply \
             -var 'docker_image=025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world:${{ 1.0.${{github.run_number}}' \
-            -var 'aws_region=${{ var.AWS_REGION }}' \
+            -var 'aws_region=${{ vars.AWS_REGION }}' \
             -auto-approve
