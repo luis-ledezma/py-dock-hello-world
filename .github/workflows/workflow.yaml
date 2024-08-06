@@ -18,7 +18,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/GitHubAction-AssumeRoleWithAction
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
       
       - name: Login to Amazon ECR
@@ -40,3 +40,31 @@ jobs:
           echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG" 
           echo "full_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+      
+      - name: TF init
+        shell: bash
+        run: |
+          set -eux
+          terraform init -upgrade -reconfigure \
+            -backend-config='skip_metadata_api_check=true' \
+            -backend-config='skip_region_validation=true' \
+            -backend-config='skip_credentials_validation=true' \
+            -backend-config='region=${{ var.AWS_REGION }}' \
+            -backend-config='bucket=${{ var.TF_S3_BUCKET }}' \
+            -backend-config='key=terraform.tfstate' \
+            -backend-config='dynamodb_table=${{ var.TF_DYNAMODB_TABLE }}' \
+            -backend-config='role_arn=${{ var.AWS_ROLE_ARN }}'
+      
+      - name: TF apply
+        shell: bash
+        run: |
+          set -eux
+          terraform apply \
+            -var 'docker_image=025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world:${{ 1.0.${{github.run_number}}' \
+            -var 'aws_region=${{ var.AWS_REGION }}' \
+            -auto-approve

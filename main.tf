@@ -1,5 +1,15 @@
+variable "docker_image" {
+    type        = string
+    description = "Docker image URI."
+}
+
+variable "aws_region" {
+    type        = string
+    description = "AWS Region for the architecture to be build."
+}
+
 provider "aws" {
-  region = "us-east-1"  # Choose your preferred region
+  region = var.aws_region
 }
 
 # Create a VPC
@@ -48,7 +58,7 @@ resource "aws_ecs_task_definition" "app" {
 
   container_definitions = jsonencode([{
     name      = "hello-world-container"
-    image     = "${aws_ecr_repository.app.repository_url}:latest"
+    image     = var.docker_image
     essential = true
     portMappings = [
       {
