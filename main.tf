@@ -43,6 +43,11 @@ resource "aws_security_group" "allow_http" {
   }
 }
 
+# Create ECS service linked role
+resource "aws_iam_service_linked_role" "ecs" {
+  aws_service_name = "ecs.amazonaws.com"
+}
+
 # Create an ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "py-docker-hello-world-cluster"
