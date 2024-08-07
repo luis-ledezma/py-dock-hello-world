@@ -122,7 +122,7 @@ resource "aws_lb" "lb" {
 }
 
 resource "aws_lb_target_group" "lb_target_group" {
-  name        = "py-docker-hello-world-target-group"
+  name        = "py-docker-hello-world-tg"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
