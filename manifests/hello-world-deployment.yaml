@@ -4,7 +4,7 @@ metadata:
   name: py-dock-hello-world
   labels: 
      app: py-dock-hello-world
-     fargate: true
+     fargate: "true"
 
 spec:
   replicas: 1 
