@@ -1,0 +1,30 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: py-dock-hello-world
+  labels: 
+     app: py-dock-hello-world
+     fargate: true
+
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: py-dock-hello-world
+
+  template:
+    metadata:
+      labels:
+        app: py-dock-hello-world
+    spec:
+      containers:
+      - name: py-dock-hello-world
+        image: DOCKER_IMAGE
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
