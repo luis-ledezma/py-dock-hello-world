@@ -7,6 +7,7 @@ on:
 jobs:
   pylint-check:
     name: Pylint
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
