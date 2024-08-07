@@ -51,7 +51,7 @@ resource "aws_route" "internet_access" {
 }
 
 resource "aws_eip" "gateway" {
-  vpc        = true
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.gateway]
 }
 
@@ -117,7 +117,7 @@ resource "aws_security_group" "lb" {
 
 resource "aws_lb" "lb" {
   name            = "py-docker-hello-world-lb"
-  subnets         = aws_subnet.public.id
+  subnets         = [aws_subnet.public.id]
   security_groups = [aws_security_group.lb.id]
 }
 
