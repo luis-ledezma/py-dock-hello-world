@@ -81,6 +81,7 @@ jobs:
       - name: Generate kubeconfig
         run: |
           aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
+          sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY:$IMAGE_TAG|g" manifests/hello-world-deployment.yaml
           {
               echo 'EKS_CREDS<<EOF'
               aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }} --dry-run
@@ -91,7 +92,13 @@ jobs:
         env:
           KUBE_CONFIG: ${{ env.EKS_CREDS }}
         with:
-          args: config current-context
+          args: apply -f manifests/hello-world-deployment.yaml
+      
+      - uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ env.EKS_CREDS }}
+        with:
+          args: apply -f manifests/hello-world-service.yaml
       
       # - uses: tale/kubectl-action@v1
       #   with:
