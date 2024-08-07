@@ -324,9 +324,10 @@ Resources:
             Condition:
               ArnLike:
                 aws:SourceArn: !Join 
-                  - "arn:aws:eks:${AWS:Region}:${AWS:AccoundId}:fargateprofile/"
-                  - !Ref EKSCluster
-                  - "/*"
+                  - "/"
+                  - - "arn:aws:eks:${AWS:Region}:${AWS:AccoundId}:fargateprofile"
+                    - !Ref EKSCluster
+                    - "*"
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
