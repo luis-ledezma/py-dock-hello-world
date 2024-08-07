@@ -39,10 +39,11 @@ jobs:
             -backend-config='skip_region_validation=true' \
             -backend-config='skip_credentials_validation=true' 
       
-      - name: TF apply
+      - name: TF destroy
         shell: bash
         run: |
           set -eux
           terraform destroy \
+            -var 'docker_image=025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world:1.0.${{github.run_number}}' \
             -var 'aws_region=${{ vars.AWS_REGION }}' \
             -auto-approve
