@@ -80,7 +80,7 @@ jobs:
       
       - name: Generate kubeconfig
         run: |
-          aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }} --dry-run | base64
+          aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
           {
               echo 'EKS_CREDS<<EOF'
               aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }} --dry-run | base64
