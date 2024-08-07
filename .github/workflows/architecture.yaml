@@ -36,7 +36,7 @@ jobs:
         uses: aws-actions/aws-cloudformation-github-deploy@master
         with:
           name: ${{ steps.env-name.outputs.environment }}-cluster
-          template: amazon-eks.yaml
+          template: cloudformation/amazon-eks.yaml
           no-fail-on-empty-changeset: "1"
           parameter-overrides: >-
           EKSClusterName=${{ vars.EKS_CLUSTER_NAME }}

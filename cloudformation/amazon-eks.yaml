@@ -352,7 +352,7 @@ Resources:
         - !Ref PrivateSubnet01
         - !Ref PrivateSubnet02
       Selectors:
-        - Namespace: dev
+        - Namespace: default
           Labels:
             - Key: fargate
               Value: true
