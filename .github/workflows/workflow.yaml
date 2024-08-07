@@ -5,8 +5,41 @@ on:
     branches:
       - main
 jobs:
-  docker:
+  pylint-check:
+    name: Pylint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9.6'
+
+      - name: Create virtual environment
+        run: python -m venv venv
+        working-directory: ${{ github.workspace }}
+
+      - name: Activate virtual environment and install dependencies
+        run: |
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements/requirements.txt
+          deactivate
+        working-directory: ${{ github.workspace }}
+
+      - name: Analyze code with Pylint
+        run: |
+          source venv/bin/activate
+          pylint $(git ls-files '*.py')
+          deactivate
+        working-directory: ${{ github.workspace }} 
+
+  build_and_deploy:
+    name: Build and Deploy
     runs-on: ubuntu-latest
+    needs: pylint-check
 
     permissions:
       id-token: write
