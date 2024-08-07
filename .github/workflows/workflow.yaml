@@ -36,6 +36,14 @@ jobs:
           pylint $(git ls-files '*.py')
           deactivate
         working-directory: ${{ github.workspace }} 
+  
+  terraform-lint:
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+      
+    - name: Lint Terraform
+      uses: actionshub/terraform-lint@main
 
   build_and_deploy:
     name: Build and Deploy
