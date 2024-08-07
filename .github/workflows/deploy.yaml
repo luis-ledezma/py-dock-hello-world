@@ -81,37 +81,24 @@ jobs:
       - name: Generate kubeconfig
         run: |
           aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }}
-          sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY:$IMAGE_TAG|g" manifests/hello-world-deployment.yaml
           {
               echo 'EKS_CREDS<<EOF'
-              aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }} --dry-run
+              aws eks update-kubeconfig --region ${{ vars.AWS_REGION }} --name ${{ vars.EKS_CLUSTER_NAME }} --dry-run | base64
               echo EOF
           } >> $GITHUB_ENV
-
-      - uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ env.EKS_CREDS }}
-        with:
-          args: apply -f manifests/hello-world-deployment.yaml
       
-      - uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ env.EKS_CREDS }}
+      - uses: tale/kubectl-action@v1
         with:
-          args: apply -f manifests/hello-world-service.yaml
-      
-      # - uses: tale/kubectl-action@v1
-      #   with:
-      #     base64-kube-config: ${{ env.EKS_CREDS }}
-      #     kubectl-version: v1.30.0
+          base64-kube-config: ${{ env.EKS_CREDS }}
+          kubectl-version: v1.30.0
 
-      # - name: Deploy to EKS
-      #   env:
-      #     ECR_REGISTRY: 025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world
-      #     IMAGE_TAG: "1.0.${{github.run_number}}"
-      #   run: |
-      #     sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY:$IMAGE_TAG|g" manifests/hello-world-deployment.yaml
-      #     kubectl version
-      #     kubectl config current-context
-      #     kubectl apply -f manifests/hello-world-deployment.yaml
-      #     kubectl apply -f manifests/hello-world-service.yaml
+      - name: Deploy to EKS
+        env:
+          ECR_REGISTRY: 025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world
+          IMAGE_TAG: "1.0.${{github.run_number}}"
+        run: |
+          sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY:$IMAGE_TAG|g" manifests/hello-world-deployment.yaml
+          kubectl version
+          kubectl config current-context
+          kubectl apply -f manifests/hello-world-deployment.yaml
+          kubectl apply -f manifests/hello-world-service.yaml
