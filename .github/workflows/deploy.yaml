@@ -97,5 +97,6 @@ jobs:
           IMAGE_TAG: "1.0.${{github.run_number}}"
         run: |
           sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY:$IMAGE_TAG|g" manifests/hello-world-deployment.yaml && \
+          kubectl version
           kubectl apply -f manifests/hello-world-deployment.yaml
           kubectl apply -f manifests/hello-world-service.yaml
