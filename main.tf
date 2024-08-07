@@ -12,6 +12,14 @@ provider "aws" {
   region = var.aws_region
 }
 
+terraform {
+  backend "s3" {
+    bucket = "py-docker-hello-world-tfstate"
+    key    = "terraform.tfstate"
+    region = "us-east-2"
+  }
+}
+
 # Create a VPC
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
