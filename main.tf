@@ -93,6 +93,53 @@ resource "aws_security_group" "allow_http" {
   }
 }
 
+resource "aws_security_group" "lb" {
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# ----------------
+# LOAD BALANCER
+# ----------------
+
+resource "aws_lb" "lb" {
+  name            = "py-docker-hello-world-lb"
+  subnets         = aws_subnet.public.id
+  security_groups = [aws_security_group.lb.id]
+}
+
+resource "aws_lb_target_group" "lb_target_group" {
+  name        = "py-docker-hello-world-target-group"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+}
+
+resource "aws_lb_listener" "lb_listener" {
+  load_balancer_arn = aws_lb.lb.id
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.lb_target_group.id
+    type             = "forward"
+  }
+}
+
 # Create an ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "py-docker-hello-world-cluster"
@@ -108,7 +155,7 @@ resource "aws_ecs_task_definition" "app" {
   execution_role_arn    = "arn:aws:iam::025066248951:role/ecsTaskExecutionRole"
 
   container_definitions = jsonencode([{
-    name      = "hello-world-container"
+    name      = "py-docker-hello-world-container"
     image     = var.docker_image
     essential = true
     portMappings = [
@@ -129,13 +176,16 @@ resource "aws_ecs_service" "app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.public.id]
+    subnets          = [aws_subnet.private.id]
     security_groups  = [aws_security_group.allow_http.id]
     assign_public_ip = true
   }
-}
 
-# Outputs the service URL to be accesed 
-output "service_url" {
-  value = "http://${aws_ecs_service.app.id}"
+  load_balancer {
+    target_group_arn = aws_lb_target_group.lb_target_group.id
+    container_name   = "py-docker-hello-world-container"
+    container_port   = 8080
+  }
+
+  depends_on = [aws_lb_listener.lb_listener]
 }
