@@ -1,11 +1,11 @@
 variable "docker_image" {
-    type        = string
-    description = "Docker image URI."
+  type        = string
+  description = "Docker image URI."
 }
 
 variable "aws_region" {
-    type        = string
-    description = "AWS Region for the architecture to be build."
+  type        = string
+  description = "AWS Region for the architecture to be build."
 }
 
 provider "aws" {

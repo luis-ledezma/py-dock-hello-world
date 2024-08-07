@@ -5,12 +5,12 @@ resource "aws_ecs_cluster" "main" {
 
 # Define the ECS Task Definition
 resource "aws_ecs_task_definition" "app" {
-  family                = "py-docker-hello-world-task"
-  network_mode          = "awsvpc"
+  family                   = "py-docker-hello-world-task"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                   = "256"
-  memory                = "512"
-  execution_role_arn    = "arn:aws:iam::025066248951:role/ecsTaskExecutionRole"
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = "arn:aws:iam::025066248951:role/ecsTaskExecutionRole"
 
   container_definitions = jsonencode([{
     name      = "py-docker-hello-world-container"
