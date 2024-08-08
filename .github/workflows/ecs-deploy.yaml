@@ -90,7 +90,12 @@ jobs:
       
       - name: Get outputs
         id: get-outputs
-        run: echo 'LB_URL=$(aws cloudformation --region us-east-2 describe-stacks --stack-name py-dock-hello-world-cluster --query "Stacks[0].Outputs[0].OutputValue")' >> $GITHUB_ENV
+        run: |
+          {
+            echo 'LB_URL<<EOF'
+            aws cloudformation --region us-east-2 describe-stacks --stack-name py-dock-hello-world-cluster --query "Stacks[0].Outputs[0].OutputValue"
+            echo EOF
+          } >> $GITHUB_ENV
 
       - name: Wait for 200 OK response
         shell: bash
