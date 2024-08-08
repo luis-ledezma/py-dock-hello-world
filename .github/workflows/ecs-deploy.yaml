@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1
     needs: build_and_deploy
-      steps:
+    steps:
       - name: Wait for 200 OK response
         run: |
           #!/bin/bash
