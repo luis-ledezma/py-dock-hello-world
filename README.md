@@ -30,3 +30,12 @@ In order to understand better the provided solution, here is the architecture di
 
 ## Usage
 Just run the [Build and Deploy - ECS](https://github.com/luis-ledezma/py-dock-hello-world/actions/workflows/ecs-deploy.yaml) Github Action.
+
+If the infrastruture needs to be replicated manually, run the cloudformation stack located at [cloudformation/amazons-ecs.yaml](https://github.com/luis-ledezma/py-dock-hello-world/blob/main/cloudformation/amazon-ecs.yaml).
+
+# Solution #2: EKS Cluster
+There is another implemented solution (if you are reading this it is currently live) that makes use of an EKS Fargate Cluster with an AWS Load Balancer Controller. The [Build and Deploy - Kubernetes](https://github.com/luis-ledezma/py-dock-hello-world/actions/workflows/eks-deploy.yaml) github action is able to deploy the same application to that cluster.
+
+This architecture needs to be set up from the local computer using [eks-provision.sh](https://github.com/luis-ledezma/py-dock-hello-world/blob/main/cloudformation/eks-provision.sh) scripting.
+
+The set up takes around 15 minutes, that is why the solution is not very likely to be disposable and be executed by Github Actions Free Tier.

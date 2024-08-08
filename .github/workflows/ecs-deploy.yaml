@@ -46,8 +46,6 @@ jobs:
       contents: read
 
     outputs:
-      image_tag: ${{ steps.build-publish.outputs.image_tag }}
-      full_image: ${{ steps.build-publish.outputs.full_image }}
       LB_URL: ${{ steps.get-outputs.outputs.LB_URL }}
 
     steps:
@@ -95,26 +93,7 @@ jobs:
             echo 'LB_URL<<EOF'
             aws cloudformation --region us-east-2 describe-stacks --stack-name py-dock-hello-world-cluster --query "Stacks[0].Outputs[0].OutputValue"
             echo EOF
-          } >> $GITHUB_ENV
-
-      - name: Wait for 200 OK response
-        shell: bash
-        env:
-          LB_URL: "${{ env.LB_URL }}"
-        run: |
-          #!/bin/bash
-          echo "${{ env.LB_URL }}"
-          while true; do
-              status_code=$(curl -s -o /dev/null -w "%{http_code}" "${{ env.LB_URL }}")
-              
-              if [ "$status_code" -eq 200 ]; then
-                  echo "Received 200 OK response!"
-                  break
-              else
-                  echo "Received $status_code. Waiting..."
-                  sleep 5  # Wait for 5 seconds before retrying
-              fi
-          done
+          } >> $GITHUB_OUTPUT
   
   healthcheck:
     name: Healthcheck
