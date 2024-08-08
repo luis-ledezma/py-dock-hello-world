@@ -91,6 +91,25 @@ jobs:
       - name: Get outputs
         id: get-outputs
         run: echo 'LB_URL=$(aws cloudformation --region us-east-2 describe-stacks --stack-name py-dock-hello-world-cluster --query "Stacks[0].Outputs[0].OutputValue")' >> $GITHUB_ENV
+
+      - name: Wait for 200 OK response
+        shell: bash
+        env:
+          LB_URL: "${{ env.EKS_CREDS }}"
+        run: |
+          #!/bin/bash
+          echo $LB_URL
+          while true; do
+              status_code=$(curl -s -o /dev/null -w "%{http_code}" "$LB_URL")
+              
+              if [ "$status_code" -eq 200 ]; then
+                  echo "Received 200 OK response!"
+                  break
+              else
+                  echo "Received $status_code. Waiting..."
+                  sleep 5  # Wait for 5 seconds before retrying
+              fi
+          done
   
   healthcheck:
     name: Healthcheck
@@ -101,7 +120,7 @@ jobs:
       - name: Wait for 200 OK response
         shell: bash
         env:
-          LB_URL: "${{needs.build_and_deploy.outputs.lburl}}"
+          LB_URL: "${{ needs.build_and_deploy.outputs.lburl }}"
         run: |
           #!/bin/bash
           
