@@ -1,4 +1,4 @@
-name: Docker image build and publish
+name: Build and Deploy - ECS
 on:
   workflow_dispatch:
   # push:
@@ -39,7 +39,7 @@ jobs:
   build_and_deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
-    needs: [pylint-check, terraform-lint]
+    needs: pylint-check
 
     permissions:
       id-token: write
