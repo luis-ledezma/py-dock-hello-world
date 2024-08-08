@@ -107,18 +107,18 @@ jobs:
     timeout-minutes: 1
     needs: build_and_deploy
       steps:
-        - name: Wait for 200 OK response
-          run: |
-            #!/bin/bash
-            
-            while true; do
-                status_code=$(curl -s -o /dev/null -w "%{http_code}" "${{needs.build_and_deploy.outputs.lburl}}")
-                
-                if [ "$status_code" -eq 200 ]; then
-                    echo "Received 200 OK response!"
-                    break
-                else
-                    echo "Received $status_code. Waiting..."
-                    sleep 5  # Wait for 5 seconds before retrying
-                fi
-            done
+      - name: Wait for 200 OK response
+        run: |
+          #!/bin/bash
+          
+          while true; do
+              status_code=$(curl -s -o /dev/null -w "%{http_code}" "${{needs.build_and_deploy.outputs.lburl}}")
+              
+              if [ "$status_code" -eq 200 ]; then
+                  echo "Received 200 OK response!"
+                  break
+              else
+                  echo "Received $status_code. Waiting..."
+                  sleep 5  # Wait for 5 seconds before retrying
+              fi
+          done
