@@ -401,10 +401,6 @@ Resources:
 
 Outputs:
 
-  SubnetIds:
-    Description: Subnets IDs in the VPC
-    Value: !Join [ ",", [ !Ref PublicSubnet01, !Ref PublicSubnet02, !Ref PrivateSubnet01, !Ref PrivateSubnet02 ] ]
-
-  VpcId:
-    Description: The VPC Id
-    Value: !Ref VPC
+  LoadBalancerURL:
+    Description: DNS for the load balancer
+    Value: !GetAtt LoadBalancer.DNSName
