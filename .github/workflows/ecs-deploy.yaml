@@ -95,12 +95,12 @@ jobs:
       - name: Wait for 200 OK response
         shell: bash
         env:
-          LB_URL: "${{ env.EKS_CREDS }}"
+          LB_URL: "${{ env.LB_URL }}"
         run: |
           #!/bin/bash
-          echo $LB_URL
+          echo "${{ env.LB_URL }}"
           while true; do
-              status_code=$(curl -s -o /dev/null -w "%{http_code}" "$LB_URL")
+              status_code=$(curl -s -o /dev/null -w "%{http_code}" "${{ env.LB_URL }}")
               
               if [ "$status_code" -eq 200 ]; then
                   echo "Received 200 OK response!"
