@@ -4,7 +4,6 @@ metadata:
   name: py-dock-hello-world
   labels: 
      app: py-dock-hello-world
-     fargate: true
 
 spec:
   replicas: 1 
@@ -14,8 +13,10 @@ spec:
 
   template:
     metadata:
+      namespace: default
       labels:
         app: py-dock-hello-world
+        fargate: "true"
     spec:
       containers:
       - name: py-dock-hello-world
