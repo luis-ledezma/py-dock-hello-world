@@ -94,7 +94,7 @@ jobs:
           {
             echo 'LB_URL<<EOF'
             aws cloudformation \
-            --region us-west-2 describe-stacks \
+            --region us-east-2 describe-stacks \
             --stack-name py-dock-hello-world-cluster \
             --query "Stacks[0].Outputs[0].OutputValue"
             echo EOF
