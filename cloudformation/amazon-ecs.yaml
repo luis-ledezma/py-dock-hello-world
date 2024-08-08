@@ -29,10 +29,10 @@ Parameters:
     Default: 192.168.192.0/18
     Description: CidrBlock for private subnet 02 within the VPC
 
-  EKSClusterName:
+  DockerImage:
     Type: String
-    Default: hello-world-eks-cluster
-    Description: The name for the EKS Cluster.
+    Default: nginx
+    Description: Docker image to be installed on the ECS task definition.
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -48,10 +48,9 @@ Metadata:
           - PrivateSubnet02Block
       -
         Label:
-          default: "EKS Config"
+          default: "ECS Configuration"
         Parameters:
-          - EKSClusterName
-
+          - DockerImage
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -275,14 +274,22 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet02
       RouteTableId: !Ref PrivateRouteTable02
-
-  ControlPlaneSecurityGroup:
+  
+  ECSlusterSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Cluster communication with worker nodes
+      GroupDescription: Limits security group egress traffic
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
       VpcId: !Ref VPC
   
-  EKSClusterSecurityGroup:
+  ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Limits security group egress traffic
@@ -295,86 +302,108 @@ Resources:
           FromPort: 80
           ToPort: 80
       VpcId: !Ref VPC
+  
+  ECSServiceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Limits security group egress traffic
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+      VpcId: !Ref VPC
+  
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: py-dock-hello-world-lb
+      SecurityGroups: 
+        - !Ref ALBSecurityGroup
+      Subnets: 
+        - !Ref PublicSubnet01
+        - !Ref PublicSubnet02
+  
+  LoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 6
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId: !Ref 'VPC'
+      TargetType: ip
 
-  EKSCluster:
-    Type: AWS::EKS::Cluster
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      Name: hello-world-eks-cluster
-      Version: "1.28"
-      RoleArn: "arn:aws:iam::025066248951:role/AmazonEKSClusterRole"
-      ResourcesVpcConfig:
-        SecurityGroupIds:
-          - !Ref EKSClusterSecurityGroup
-        SubnetIds:
-          - !Ref PublicSubnet01
-          - !Ref PublicSubnet02
-          - !Ref PrivateSubnet01
-          - !Ref PrivateSubnet02
-        EndpointPublicAccess: true
-        EndpointPrivateAccess: true
-        PublicAccessCidrs: [ "0.0.0.0/0" ]
-      Logging:
-        ClusterLogging:
-          EnabledTypes:
-            - Type: api
-            - Type: audit
+      DefaultActions: 
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !Ref LoadBalancerTargetGroup
+                Weight: 1
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  ECSCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: py-dock-hello-world-cluster
   
-  AmazonEKSFargatePodExecutionRole:
-    Type: 'AWS::IAM::Role'
+  ECSTaskDefinition:
+    Type: 'AWS::ECS::TaskDefinition'
     Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - eks-fargate-pods.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-            Condition:
-              ArnLike:
-                aws:SourceArn: !Join 
-                  - "/"
-                  - - !Sub "arn:aws:eks:${AWS::Region}:${AWS::AccountId}:fargateprofile"
-                    - !Ref EKSCluster
-                    - "*"
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
-  
-  EKSFargateProfile:
-    Type: 'AWS::EKS::FargateProfile'
+      ContainerDefinitions:
+        - Name: py-dock-hello-world-task
+          Image: !Ref DockerImage
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8080
+              HostPort: 8080
+              Protocol: tcp
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: "arn:aws:iam::025066248951:role/ecsTaskExecutionRole"
+    
+  ECSService:
+    Type: 'AWS::ECS::Service'
+    DependsOn: LoadBalancerListener
     Properties:
-      FargateProfileName: hello-world-eks-fargate-profile
-      ClusterName: !Ref EKSCluster
-      PodExecutionRoleArn: !GetAtt AmazonEKSFargatePodExecutionRole.Arn
-      Subnets:
-        - !Ref PrivateSubnet01
-        - !Ref PrivateSubnet02
-      Selectors:
-        - Namespace: default
-        - Namespace: cert-manager
-        - Namespace: kube-system
-  
-  EKSIdpConfig:
-    DependsOn: EKSFargateProfile
-    Type: AWS::EKS::IdentityProviderConfig
-    Properties:
-      ClusterName: !Ref EKSCluster
-      Type: oidc
-      Oidc:
-        ClientId: "kubernetes"
-        IssuerUrl: "https://example.com"
+      ServiceName: py-dock-hello-world-service
+      Cluster: !Ref ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ECSServiceSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnet01
+            - !Ref PrivateSubnet02
+      TaskDefinition: !Ref ECSTaskDefinition
+      LoadBalancers:
+        - ContainerName: py-dock-hello-world-task
+          ContainerPort: 8080
+          TargetGroupArn: !Ref LoadBalancerTargetGroup
 
 Outputs:
 
   SubnetIds:
     Description: Subnets IDs in the VPC
     Value: !Join [ ",", [ !Ref PublicSubnet01, !Ref PublicSubnet02, !Ref PrivateSubnet01, !Ref PrivateSubnet02 ] ]
-
-  SecurityGroups:
-    Description: Security group for the cluster control plane communication with worker nodes
-    Value: !Join [ ",", [ !Ref ControlPlaneSecurityGroup ] ]
 
   VpcId:
     Description: The VPC Id

@@ -1,4 +1,4 @@
-name: Docker image build and publish
+name: Docker image build and publish - Kubernetes
 on:
   workflow_dispatch:
   # push:
@@ -90,15 +90,12 @@ jobs:
       - uses: tale/kubectl-action@v1
         with:
           base64-kube-config: ${{ env.EKS_CREDS }}
-          kubectl-version: v1.30.0
+          kubectl-version: v1.28.0
 
       - name: Deploy to EKS
         env:
           ECR_REGISTRY: 025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world
           IMAGE_TAG: "1.0.${{github.run_number}}"
         run: |
-          sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY:$IMAGE_TAG|g" manifests/hello-world-deployment.yaml
-          kubectl version
-          kubectl config current-context
-          kubectl apply -f manifests/hello-world-deployment.yaml
-          kubectl apply -f manifests/hello-world-service.yaml
+          sed -i.bak "s|DOCKER_IMAGE|$ECR_REGISTRY:$IMAGE_TAG|g" manifests/hello-world-app.yaml
+          kubectl apply -f manifests/hello-world-app.yaml

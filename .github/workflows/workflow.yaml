@@ -35,16 +35,6 @@ jobs:
           pylint $(git ls-files '*.py')
           deactivate
         working-directory: ${{ github.workspace }} 
-  
-  terraform-lint:
-    name: Terraform Lint
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-
-    - name: Lint Terraform
-      uses: actionshub/terraform-lint@main
 
   build_and_deploy:
     name: Build and Deploy
@@ -87,26 +77,12 @@ jobs:
           echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG" 
           echo "full_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-      
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+
+      - name: Deploy Amazon EKS Cluster
+        id: eks-cluster
+        uses: aws-actions/aws-cloudformation-github-deploy@master
         with:
-          terraform_wrapper: false
-      
-      - name: TF init
-        shell: bash
-        run: |
-          set -eux
-          terraform init -upgrade -reconfigure \
-            -backend-config='skip_metadata_api_check=true' \
-            -backend-config='skip_region_validation=true' \
-            -backend-config='skip_credentials_validation=true' 
-      
-      - name: TF apply
-        shell: bash
-        run: |
-          set -eux
-          terraform apply \
-            -var 'docker_image=025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world:1.0.${{github.run_number}}' \
-            -var 'aws_region=${{ vars.AWS_REGION }}' \
-            -auto-approve
+          name: py-dock-hello-world-cluster
+          template: cloudformation/amazon-ecs.yaml
+          no-fail-on-empty-changeset: "1"
+          parameter-overrides: "DockerImage=025066248951.dkr.ecr.us-east-2.amazonaws.com/py-docker-hello-world:1.0.${{github.run_number}}"
